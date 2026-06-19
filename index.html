@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taste of Home</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f7f3ea;
+            --card: #ffffff;
+            --text: #171717;
+            --muted: #777777;
+            --red: #d42f2f;
+            --dark: #1f1f1f;
+            --gold: #c5a059;
+            --shadow: 0 12px 35px rgba(0,0,0,.08);
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 90px;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font-family: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        .app {
+            max-width: 620px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .tab {
+            display: none;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        .hero {
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 0 0 30px 30px;
+            background: #222;
+        }
+
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: .35s;
+            display: flex;
+            align-items: flex-end;
+            padding: 22px;
+            color: #fff;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+        }
+
+        .hero-slide:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.78));
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        .hero-title {
+            font-size: 34px;
+            line-height: 1;
+            font-weight: 900;
+            margin: 0 0 8px;
+        }
+
+        .hero-subtitle {
+            margin: 0 0 18px;
+            opacity: .9;
+        }
+
+        .search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+
+        .search input {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .search input::placeholder {
+            color: rgba(255,255,255,.75);
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: flex-end;
+            padding: 18px 18px 0;
+        }
+
+        .lang {
+            display: flex;
+            background: #fff;
+            border-radius: 999px;
+            padding: 5px;
+            box-shadow: var(--shadow);
+            gap: 5px;
+        }
+
+        .lang button {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: transparent;
+            font-weight: 800;
+            color: #777;
+        }
+
+        .lang button.active {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .categories {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 18px;
+        }
+
+        .categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat {
+            flex: 0 0 auto;
+            background: #fff;
+            border-radius: 999px;
+            padding: 11px 17px;
+            font-weight: 800;
+            box-shadow: var(--shadow);
+            color: #333;
+        }
+
+        .cat.active {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 18px 14px;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 0 18px 20px;
+        }
+
+        .product {
+            background: #fff;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .product img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+            background: #eee;
+        }
+
+        .product-body {
+            padding: 13px;
+        }
+
+        .product-name {
+            font-weight: 900;
+            font-size: 14px;
+            min-height: 38px;
+        }
+
+        .product-weight {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .side-mark {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #8a6500;
+            background: #fff3cd;
+            border-radius: 999px;
+            display: inline-block;
+            padding: 4px 8px;
+            font-weight: 800;
+        }
+
+        .product-bottom {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .price {
+            color: var(--red);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .add {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: var(--dark);
+            color: #fff;
+            font-size: 22px;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--gold);
+            color: #fff;
+            padding: 5px 9px;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .empty {
+            text-align: center;
+            color: #888;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .cart-item {
+            margin: 14px 18px;
+            background: #fff;
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            padding: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .cart-item img {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        .cart-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cart-name {
+            font-weight: 900;
+        }
+
+        .cart-side {
+            margin-top: 3px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .qty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #ddd;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .form {
+            margin: 18px;
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            color: #777;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid #eee;
+            border-radius: 14px;
+            background: #f8f8f5;
+            padding: 13px 14px;
+            outline: 0;
+            font-size: 15px;
+        }
+
+        input[type="datetime-local"] {
+            min-height: 48px;
+        }
+
+        .radio-row {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            margin: 9px 0;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #333 !important;
+            text-transform: none !important;
+        }
+
+        .radio-row input {
+            width: auto;
+        }
+
+        .summary {
+            border-top: 1px solid #eee;
+            margin-top: 14px;
+            padding-top: 14px;
+        }
+
+        .line {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .line.total {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .note {
+            color: #777;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .checkout {
+            width: 100%;
+            margin-top: 16px;
+            padding: 17px;
+            border-radius: 18px;
+            background: var(--red);
+            color: #fff;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 10px 25px rgba(212,47,47,.28);
+        }
+
+        .checkout:disabled {
+            background: #999;
+            box-shadow: none;
+        }
+
+        .profile-header {
+            background: linear-gradient(45deg, #222, #333);
+            color: #fff;
+            border-radius: 0 0 32px 32px;
+            padding: 38px 20px;
+            text-align: center;
+        }
+
+        .profile-card {
+            margin: 18px;
+            background: #fff;
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .history-item {
+            padding: 12px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 620px;
+            background: rgba(255,255,255,.95);
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 10px 22px;
+            z-index: 50;
+        }
+
+        .nav {
+            background: transparent;
+            color: #999;
+            font-size: 11px;
+            font-weight: 900;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            position: relative;
+        }
+
+        .nav.active {
+            color: var(--red);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background: var(--red);
+            color: #fff;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 999px;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.48);
+            z-index: 100;
+            display: none;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .sheet {
+            width: 100%;
+            max-width: 620px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 28px 28px 0 0;
+            padding: 22px;
+            max-height: 88vh;
+            overflow: auto;
+        }
+
+        .sheet img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: cover;
+            border-radius: 22px;
+            background: #eee;
+        }
+
+        .side-options {
+            display: grid;
+            gap: 9px;
+            margin-top: 12px;
+        }
+
+        .side-option {
+            text-align: left;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border: 1px solid #eee;
+            background: #fafafa;
+            font-weight: 800;
+        }
+
+        .side-option.active {
+            border-color: var(--red);
+            background: #fff0f0;
+            color: var(--red);
+        }
+
+        .working-hours {
+            margin: 0 18px 16px;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 14px 16px;
+            display: none;
+        }
+
+        .working-hours.active { display: block; }
+
+        .working-hours h3 {
+            margin: 0 0 6px;
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--red);
+        }
+
+        .working-hours div {
+            white-space: pre-line;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        .extra-options {
+            margin-top: 14px;
+        }
+
+        .extra-title {
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .extra-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-weight: 800;
+        }
+
+        .extra-option input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--red);
+        }
+
+        .cart-extra {
+            margin-top: 4px;
+            color: #777;
+            font-size: 13px;
+        }
+
+
+        .modal-qty-box {
+            margin-top: 16px;
+            background: #f8f8f5;
+            border: 1px solid #eeeeee;
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .modal-qty-label {
+            font-weight: 900;
+            color: #333;
+        }
+
+        .modal-qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-qty-controls button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #dddddd;
+            font-size: 20px;
+            font-weight: 900;
+            color: #222;
+        }
+
+        .modal-qty-controls strong {
+            min-width: 26px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .add.add-press,
+        #modal-add.add-press {
+            animation: addPress .28s ease;
+        }
+
+        .cart-badge.cart-bump {
+            display: flex !important;
+            animation: cartBump .45s ease;
+        }
+
+        .cart-item.cart-highlight {
+            animation: cartHighlight .75s ease;
+        }
+
+        .add-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 92px;
+            transform: translate(-50%, 18px);
+            width: calc(100% - 36px);
+            max-width: 560px;
+            background: rgba(31,31,31,.96);
+            color: #fff;
+            border-radius: 18px;
+            padding: 13px 16px;
+            box-shadow: 0 14px 35px rgba(0,0,0,.22);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: .22s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .add-toast.active {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .add-toast strong {
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .add-toast span {
+            font-size: 12px;
+            color: rgba(255,255,255,.78);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @keyframes addPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(.95); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes cartBump {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.45); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes cartHighlight {
+            0% { background: #fff7dd; transform: scale(1); }
+            45% { background: #fff0f0; transform: scale(1.01); }
+            100% { background: #fff; transform: scale(1); }
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .secondary {
+            background: #222;
+            color: #fff;
+            border-radius: 16px;
+            padding: 14px;
+            font-weight: 900;
+        }
+
+        @media(max-width:420px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                height: 320px;
+            }
+
+            .hero-title {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <section id="menu-tab" class="tab active">
+        <div class="hero" id="hero"></div>
+
+        <div class="top-row">
+            <div class="lang">
+                <button id="lang-ru" data-lang="ru">RU</button>
+                <button id="lang-en" data-lang="en">EN</button>
+            </div>
+        </div>
+
+        <div class="working-hours" id="working-hours-block">
+            <h3 id="working-hours-title">Working hours</h3>
+            <div id="working-hours-text"></div>
+        </div>
+
+        <div class="categories" id="categories"></div>
+
+        <div class="section-title">
+            <span id="menu-title">Меню</span>
+            <span id="loading">...</span>
+        </div>
+
+        <div class="grid" id="products">
+            <div class="empty">Загрузка...</div>
+        </div>
+    </section>
+
+    <section id="cart-tab" class="tab">
+        <div class="section-title" style="padding-top:24px;">
+            <span id="cart-title">Корзина</span>
+        </div>
+
+        <div id="cart-list"></div>
+
+        <form class="form" id="order-form">
+            <div class="field">
+                <label id="label-name">Имя</label>
+                <input id="order-name" autocomplete="name" required>
+            </div>
+
+            <div class="field">
+                <label id="label-phone">Телефон</label>
+                <input id="order-phone" autocomplete="tel" required>
+            </div>
+
+            <div class="field">
+                <label id="label-type">Получение</label>
+                <select id="order-type">
+                    <option value="delivery">Доставка</option>
+                    <option value="pickup">Самовывоз</option>
+                </select>
+            </div>
+
+            <div class="field" id="district-field">
+                <label id="label-district">Район</label>
+                <select id="order-district"></select>
+            </div>
+
+            <div class="field" id="address-field">
+                <label id="label-address">Адрес</label>
+                <input id="order-address" autocomplete="street-address">
+            </div>
+
+            <div class="field">
+                <label id="label-delivery-datetime">Выберите время, к которому заказ должен быть готов</label>
+                <input id="order-delivery-datetime" type="datetime-local" required>
+                <div class="note" id="delivery-datetime-note">Выберите дату и время.</div>
+            </div>
+
+            <div class="field">
+                <label id="label-payment">Способ оплаты</label>
+
+                <label class="radio-row">
+                    <input type="radio" name="payment_method" value="cash" checked>
+                    <span id="payment-cash-label">Наличные, +20 000 ₫ за приём денег Grab</span>
+                </label>
+
+                <label class="radio-row">
+                    <input type="radio" name="payment_method" value="transfer">
+                    <span id="payment-transfer-label">Перевод</span>
+                </label>
+
+                <label class="radio-row">
+                    <input type="radio" name="payment_method" value="card">
+                    <span id="payment-card-label">Карта</span>
+                </label>
+            </div>
+
+            <div class="field">
+                <label id="label-comment">Комментарий</label>
+                <textarea id="order-comment"></textarea>
+            </div>
+
+            <div class="summary">
+                <div class="line">
+                    <span id="subtotal-label">Сумма блюд</span>
+                    <strong id="subtotal">0 ₫</strong>
+                </div>
+
+                <div class="line">
+                    <span id="delivery-label">Доставка/сбор</span>
+                    <strong id="delivery">0 ₫</strong>
+                </div>
+
+                <div class="note" id="delivery-note"></div>
+
+                <div class="line total">
+                    <span id="total-label">Итого</span>
+                    <strong id="total">0 ₫</strong>
+                </div>
+            </div>
+
+            <button class="checkout" id="checkout" type="submit">Оформить заказ</button>
+        </form>
+    </section>
+
+    <section id="profile-tab" class="tab">
+        <div class="profile-header">
+            <h1>Taste of Home</h1>
+            <p id="profile-subtitle">История заказов</p>
+        </div>
+
+        <div class="profile-card">
+            <h2 id="history-title">История</h2>
+            <div id="history"></div>
+        </div>
+    </section>
+</div>
+
+<div class="bottom-nav">
+    <button class="nav active" data-tab="menu">
+        <span class="nav-icon">🍽️</span>
+        <span id="nav-menu">Меню</span>
+    </button>
+
+    <button class="nav" data-tab="cart">
+        <span class="nav-icon">🛒<span class="cart-badge" id="cart-badge">0</span></span>
+        <span id="nav-cart">Корзина</span>
+    </button>
+
+    <button class="nav" data-tab="profile">
+        <span class="nav-icon">👤</span>
+        <span id="nav-profile">Профиль</span>
+    </button>
+</div>
+
+<div class="modal" id="product-modal">
+    <div class="sheet">
+        <img id="modal-img" src="" alt="">
+        <h2 id="modal-name" style="margin:16px 0 6px;"></h2>
+        <div id="modal-price" class="price"></div>
+        <p id="modal-desc" style="color:#666;"></p>
+        <div id="modal-sides"></div>
+
+        <div class="modal-actions">
+            <button type="button" class="secondary" id="modal-close">Закрыть</button>
+            <button type="button" class="checkout" id="modal-add" style="margin:0;">Добавить</button>
+        </div>
+    </div>
+</div>
+
+<div class="add-toast" id="add-toast"></div>
+
+<script>
+const APP_CONFIG = {
+    API_BASE_URL: 'https://dense-ourselves-term-males.trycloudflare.com',
+    GROUP_URL: 'https://t.me/homemade_global_cuisine'
+};
+
+const tg = window.Telegram?.WebApp || {
+    ready(){},
+    expand(){},
+    showAlert(message){ alert(message); },
+    showConfirm(message, callback){ callback(confirm(message)); },
+    HapticFeedback:{ impactOccurred(){} },
+    initDataUnsafe:{}
+};
+
+tg.ready();
+tg.expand();
+
+const PLACEHOLDER_IMG = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+<rect width="100%" height="100%" fill="#eeeeee"/>
+<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#999" font-size="24">Taste of Home</text>
+</svg>`);
+
+const state = {
+    isLoading: true,
+    lang: localStorage.getItem('toh_lang') || 'ru',
+    products: [],
+    categories: [],
+    banners: [],
+    deliverySettings: [],
+    activeCategory: 'all',
+    cart: JSON.parse(localStorage.getItem('toh_cart') || '[]'),
+    history: JSON.parse(localStorage.getItem('toh_history') || '[]'),
+    selectedProduct: null,
+    selectedSide: '',
+    selectedExtras: [],
+    modalQty: 1,
+    lastAddedCartKey: '',
+    workingHours: '',
+    workingHoursRu: '',
+    workingHoursEn: ''
+};
+
+const i18n = {
+    ru: {
+        menu:'Меню',
+        cart:'Корзина',
+        profile:'Профиль',
+        search:'Поиск блюд...',
+        loading:'Загрузка...',
+        all:'Все',
+        add:'Добавить',
+        close:'Закрыть',
+        chooseSide:'Выберите гарнир',
+        side:'Гарнир',
+        needSide:'Выберите гарнир',
+        unavailable:'Нет в наличии',
+        cartEmpty:'Корзина пустая',
+        name:'Имя',
+        phone:'Телефон',
+        type:'Получение',
+        delivery:'Доставка',
+        pickup:'Самовывоз',
+        district:'Район',
+        address:'Адрес',
+        deliveryDateTime:'Выберите время, к которому заказ должен быть готов',
+        deliveryDateTimeNote:'Выберите дату и время.',
+        payment:'Способ оплаты',
+        cash:'Наличные, +20 000 ₫ за приём денег Grab',
+        transfer:'Перевод',
+        card:'Карта',
+        comment:'Комментарий',
+        subtotal:'Сумма блюд',
+        deliveryFee:'Доставка/сбор',
+        total:'Итого',
+        checkout:'Оформить заказ',
+        required:'Заполните обязательные поля',
+        chooseDateTime:'Выберите дату и время доставки',
+        confirm:'Оформить заказ?',
+        sending:'Отправляем...',
+        success:'Заказ оформлен',
+        history:'История заказов',
+        noHistory:'Заказов пока нет',
+        free:'Бесплатно',
+        grab:'По тарифу Grab',
+        cashFee:'Доплата Grab за приём наличных',
+        deliveryTimePrefix:'Время доставки',
+        addOn:'Дополнительно',
+        quantity:'Количество',
+        addedToCart:'Добавлено в корзину',
+        workingHours:'Часы работы'
+    },
+    en: {
+        menu:'Menu',
+        cart:'Cart',
+        profile:'Profile',
+        search:'Search dishes...',
+        loading:'Loading...',
+        all:'All',
+        add:'Add',
+        close:'Close',
+        chooseSide:'Choose a side dish',
+        side:'Side',
+        needSide:'Choose a side dish',
+        unavailable:'Unavailable',
+        cartEmpty:'Cart is empty',
+        name:'Name',
+        phone:'Phone',
+        type:'Type',
+        delivery:'Delivery',
+        pickup:'Pickup',
+        district:'District',
+        address:'Address',
+        deliveryDateTime:'Delivery date and time',
+        deliveryDateTimeNote:'Choose exact date and time.',
+        payment:'Payment method',
+        cash:'Cash, +20 000 ₫ Grab cash collection fee',
+        transfer:'Transfer',
+        card:'Card',
+        comment:'Comment',
+        subtotal:'Food subtotal',
+        deliveryFee:'Delivery/fee',
+        total:'Total',
+        checkout:'Place order',
+        required:'Fill required fields',
+        chooseDateTime:'Choose delivery date and time',
+        confirm:'Place order?',
+        sending:'Sending...',
+        success:'Order placed',
+        history:'Order history',
+        noHistory:'No orders yet',
+        free:'Free',
+        grab:'Grab tariff',
+        cashFee:'Grab cash collection fee',
+        deliveryTimePrefix:'Delivery time',
+        addOn:'Add on',
+        quantity:'Quantity',
+        addedToCart:'Added to cart',
+        workingHours:'Working hours'
+    }
+};
+
+function t(key) {
+    return i18n[state.lang][key] || key;
+}
+
+function saveCart() {
+    localStorage.setItem('toh_cart', JSON.stringify(state.cart));
+}
+
+function saveHistory() {
+    localStorage.setItem('toh_history', JSON.stringify(state.history));
+}
+
+function formatPrice(value) {
+    return `${Number(value || 0).toLocaleString('ru-RU')} ₫`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+    }[character]));
+}
+
+function apiUrl(path) {
+    if (String(path).startsWith('http')) {
+        return path;
+    }
+
+    return APP_CONFIG.API_BASE_URL.replace(/\/$/, '') + path;
+}
+
+async function apiGet(path) {
+    const response = await fetch(apiUrl(path), {
+        headers: {
+            'ngrok-skip-browser-warning':'true'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(path + ' HTTP ' + response.status);
+    }
+
+    return response.json();
+}
+
+async function apiPost(path, body) {
+    const response = await fetch(apiUrl(path), {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'ngrok-skip-browser-warning':'true'
+        },
+        body:JSON.stringify(body)
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.detail || 'Server error');
+    }
+
+    return data;
+}
+
+function imageOf(item) {
+    const source =
+        item.image_data_url ||
+        item.image_full_url ||
+        item.image_url ||
+        item.img ||
+        item.image ||
+        '';
+
+    if (!source) return PLACEHOLDER_IMG;
+    if (String(source).startsWith('data:image')) return source;
+    if (String(source).startsWith('http')) return source;
+
+    return APP_CONFIG.API_BASE_URL.replace(/\/$/, '') + '/' + String(source).replace(/^\//, '');
+}
+
+function splitBilingualName(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return {name:'', ru:'', en:''};
+
+    let ru = raw;
+    let en = raw;
+
+    if (raw.includes('::')) {
+        const parts = raw.split('::');
+        ru = parts.shift();
+        en = parts.join('::');
+    } else if (raw.includes(' / ')) {
+        const parts = raw.split(' / ');
+        ru = parts.shift();
+        en = parts.join(' / ');
+    } else if (raw.includes('/')) {
+        const parts = raw.split('/');
+        ru = parts.shift();
+        en = parts.join('/');
+    } else if (raw.includes(':')) {
+        // FULL FIX: поддержка формата RU:EN.
+        // Гарнир: Пюре:Mashed Potatoes
+        // Add on: Сало:Lard:30000, где цена отрезается в parseExtraOptions до этой функции.
+        const parts = raw.split(':');
+        ru = parts.shift();
+        en = parts.join(':');
+    }
+
+    ru = String(ru || '').trim();
+    en = String(en || '').trim();
+    const name = ru || en;
+    return {name, ru: ru || name, en: en || name};
+}
+
+function optionLabel(option) {
+    if (!option || typeof option !== 'object') return String(option || '');
+    return state.lang === 'ru'
+        ? (option.name_ru || option.name || option.name_en || '')
+        : (option.name_en || option.name || option.name_ru || '');
+}
+
+function parseSides(value) {
+    if (Array.isArray(value)) {
+        return value.map(item => {
+            if (typeof item === 'object' && item !== null) {
+                return {
+                    name:String(item.name || item.name_ru || item.name_en || '').trim(),
+                    name_ru:String(item.name_ru || item.name || item.name_en || '').trim(),
+                    name_en:String(item.name_en || item.name || item.name_ru || '').trim()
+                };
+            }
+            const parsed = splitBilingualName(item);
+            return {name:parsed.name, name_ru:parsed.ru, name_en:parsed.en};
+        }).filter(item => item.name);
+    }
+
+    return String(value || '')
+        .split('|')
+        .map(item => {
+            const parsed = splitBilingualName(item);
+            return {name:parsed.name, name_ru:parsed.ru, name_en:parsed.en};
+        })
+        .filter(item => item.name);
+}
+
+function parseExtraOptions(value) {
+    const parseOne = (rawValue) => {
+        if (typeof rawValue === 'object' && rawValue !== null) {
+            return {
+                name:String(rawValue.name || rawValue.name_ru || rawValue.name_en || '').trim(),
+                name_ru:String(rawValue.name_ru || rawValue.name || rawValue.name_en || '').trim(),
+                name_en:String(rawValue.name_en || rawValue.name || rawValue.name_ru || '').trim(),
+                price:Number(rawValue.price || 0)
+            };
+        }
+
+        const raw = String(rawValue || '').trim();
+        const lastColon = raw.lastIndexOf(':');
+        let namePart = raw;
+        let pricePart = '0';
+
+        if (lastColon !== -1) {
+            namePart = raw.slice(0, lastColon);
+            pricePart = raw.slice(lastColon + 1);
+        }
+
+        const parsed = splitBilingualName(namePart);
+        return {
+            name:parsed.name,
+            name_ru:parsed.ru,
+            name_en:parsed.en,
+            price:Number(String(pricePart || '0').replace(/[^0-9]/g, '') || 0)
+        };
+    };
+
+    if (Array.isArray(value)) {
+        return value.map(parseOne).filter(item => item.name);
+    }
+
+    return String(value || '')
+        .replace(/\r/g, '\n')
+        .replace(/\|/g, '\n')
+        .split('\n')
+        .map(parseOne)
+        .filter(item => item.name);
+}
+
+function extrasLabel(extras) {
+    return (extras || []).map(item => {
+        const label = optionLabel(item);
+        return item.price ? `${label} +${formatPrice(item.price)}` : label;
+    }).join(', ');
+}
+
+function normalizeProduct(item) {
+    return {
+        id:String(item.id),
+        category:item.category_id || item.category || '',
+        name:{
+            ru:item.name_ru || item.name?.ru || '',
+            en:item.name_en || item.name?.en || item.name_ru || ''
+        },
+        desc:{
+            ru:item.description_ru || item.desc?.ru || '',
+            en:item.description_en || item.desc?.en || item.description_ru || ''
+        },
+        price:Number(item.price || 0),
+        old_price:item.old_price || null,
+        img:imageOf(item),
+        badge:item.badge || '',
+        weight:item.weight || '',
+        side_options:parseSides(item.side_options),
+        extra_options:parseExtraOptions(item.extra_options),
+        is_available:item.is_available !== 0 && item.is_available !== false,
+        sort_order:Number(item.sort_order || 100)
+    };
+}
+
+function productName(product) {
+    return state.lang === 'ru'
+        ? product.name.ru || product.name.en
+        : product.name.en || product.name.ru;
+}
+
+function productDesc(product) {
+    return state.lang === 'ru'
+        ? product.desc.ru || product.desc.en
+        : product.desc.en || product.desc.ru;
+}
+
+function categoryTitle(category) {
+    return state.lang === 'ru'
+        ? category.title_ru || category.title_en
+        : category.title_en || category.title_ru;
+}
+
+function districtApiValue(value) {
+    const map = {
+        districtOceanPark1:'Ocean Park 1',
+        districtOceanPark2:'Ocean Park 2',
+        districtEcoPark:'Eco Park',
+        districtHanoi:'Hanoi'
+    };
+
+    return map[value] || value;
+}
+
+function deliveryKeyFromDistrict(district) {
+    const map = {
+        'Ocean Park 1':'districtOceanPark1',
+        'Ocean Park 2':'districtOceanPark2',
+        'Eco Park':'districtEcoPark',
+        'Hanoi':'districtHanoi'
+    };
+
+    return map[district] || district;
+}
+
+function getPaymentMethod() {
+    return document.querySelector('input[name="payment_method"]:checked')?.value || 'cash';
+}
+
+function paymentLabel(value) {
+    if (value === 'cash') return state.lang === 'ru' ? 'Наличные' : 'Cash';
+    if (value === 'transfer') return state.lang === 'ru' ? 'Перевод' : 'Transfer';
+    if (value === 'card') return state.lang === 'ru' ? 'Карта' : 'Card';
+    return value;
+}
+
+function pad2(value) {
+    return String(value).padStart(2, '0');
+}
+
+function toDateTimeLocalValue(date) {
+    return [
+        date.getFullYear(),
+        pad2(date.getMonth() + 1),
+        pad2(date.getDate())
+    ].join('-') + 'T' + [
+        pad2(date.getHours()),
+        pad2(date.getMinutes())
+    ].join(':');
+}
+
+function setDefaultDeliveryDateTime() {
+    const input = document.getElementById('order-delivery-datetime');
+
+    if (!input) return;
+
+    input.removeAttribute('min');
+
+    if (!input.value) {
+        const now = new Date();
+        now.setSeconds(0);
+        now.setMilliseconds(0);
+        input.value = toDateTimeLocalValue(now);
+    }
+}
+
+function formatDeliveryDateTime(value) {
+    if (!value) return '';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString(state.lang === 'ru' ? 'ru-RU' : 'en-US', {
+        year:'numeric',
+        month:'2-digit',
+        day:'2-digit',
+        hour:'2-digit',
+        minute:'2-digit'
+    });
+}
+
+function isDeliveryDateTimeValid() {
+    const input = document.getElementById('order-delivery-datetime');
+    return Boolean(input && input.value);
+}
+
+function calculateDelivery(subtotal) {
+    const type = document.getElementById('order-type')?.value || 'delivery';
+    const district = districtApiValue(document.getElementById('order-district')?.value || 'districtOceanPark1');
+    const payment = getPaymentMethod();
+    const cashFee = payment === 'cash' ? 20000 : 0;
+
+    if (type !== 'delivery') {
+        return {
+            delivery_fee:0,
+            payment_cash_fee:cashFee,
+            delivery_total:cashFee,
+            delivery_label:cashFee ? `${t('free')} + ${formatPrice(cashFee)}` : t('free'),
+            delivery_note:cashFee ? `${t('cashFee')}: ${formatPrice(cashFee)}.` : ''
+        };
+    }
+
+    const setting = state.deliverySettings.find(item => item.district === district);
+
+    let base = 0;
+    let label = t('free');
+    let note = '';
+
+    if (setting) {
+        const min = Number(setting.min_free_amount || 0);
+        const fee = Number(setting.delivery_fee || 0);
+        const grabLabel = setting.grab_label || '';
+
+        if (district === 'Hanoi' && subtotal < 200000 && grabLabel) {
+            base = 0;
+            label = grabLabel;
+            note = grabLabel;
+        } else if (min > 0 && subtotal < min) {
+            base = fee;
+            label = formatPrice(base);
+            note = `${state.lang === 'ru' ? 'Бесплатно от' : 'Free from'} ${formatPrice(min)}.`;
+        } else {
+            base = 0;
+            label = t('free');
+            note = min ? `${state.lang === 'ru' ? 'Бесплатная доставка от' : 'Free delivery from'} ${formatPrice(min)}.` : '';
+        }
+    } else {
+        if (district === 'Ocean Park 2' || district === 'Eco Park') {
+            base = subtotal >= 200000 ? 0 : 50000;
+        }
+
+        if (district === 'Hanoi') {
+            if (subtotal >= 500000) {
+                base = 0;
+            } else if (subtotal >= 200000) {
+                base = 80000;
+            } else {
+                base = 0;
+                label = t('grab');
+            }
+        }
+
+        if (base) {
+            label = formatPrice(base);
+        }
+    }
+
+    if (cashFee) {
+        label = `${label} + ${formatPrice(cashFee)}`;
+        note = `${note ? note + ' ' : ''}${t('cashFee')}: ${formatPrice(cashFee)}.`;
+    }
+
+    return {
+        delivery_fee:base,
+        payment_cash_fee:cashFee,
+        delivery_total:base + cashFee,
+        delivery_label:label,
+        delivery_note:note
+    };
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(item => item.classList.remove('active'));
+    document.getElementById(`${tab}-tab`)?.classList.add('active');
+
+    document.querySelectorAll('.nav').forEach(item => {
+        item.classList.toggle('active', item.dataset.tab === tab);
+    });
+
+    setDefaultDeliveryDateTime();
+    renderCart();
+}
+
+function applyTexts() {
+    document.documentElement.lang = state.lang;
+
+    document.getElementById('lang-ru').classList.toggle('active', state.lang === 'ru');
+    document.getElementById('lang-en').classList.toggle('active', state.lang === 'en');
+
+    document.getElementById('menu-title').textContent = t('menu');
+    document.getElementById('cart-title').textContent = t('cart');
+    document.getElementById('nav-menu').textContent = t('menu');
+    document.getElementById('nav-cart').textContent = t('cart');
+    document.getElementById('nav-profile').textContent = t('profile');
+
+    document.getElementById('label-name').textContent = t('name');
+    document.getElementById('label-phone').textContent = t('phone');
+    document.getElementById('label-type').textContent = t('type');
+    document.getElementById('label-district').textContent = t('district');
+    document.getElementById('label-address').textContent = t('address');
+    document.getElementById('label-delivery-datetime').textContent = t('deliveryDateTime');
+    document.getElementById('delivery-datetime-note').textContent = t('deliveryDateTimeNote');
+    document.getElementById('label-payment').textContent = t('payment');
+    document.getElementById('payment-cash-label').textContent = t('cash');
+    document.getElementById('payment-transfer-label').textContent = t('transfer');
+    document.getElementById('payment-card-label').textContent = t('card');
+    document.getElementById('label-comment').textContent = t('comment');
+    document.getElementById('subtotal-label').textContent = t('subtotal');
+    document.getElementById('delivery-label').textContent = t('deliveryFee');
+    document.getElementById('total-label').textContent = t('total');
+    document.getElementById('checkout').textContent = t('checkout');
+    document.getElementById('profile-subtitle').textContent = t('history');
+    document.getElementById('history-title').textContent = t('history');
+
+    document.getElementById('order-type').options[0].textContent = t('delivery');
+    document.getElementById('order-type').options[1].textContent = t('pickup');
+}
+
+function renderHero() {
+    const hero = document.getElementById('hero');
+
+    const banners = state.banners.length ? state.banners : [{
+        title_ru:'Taste of Home',
+        title_en:'Taste of Home',
+        subtitle_ru:'Домашняя еда с теплом',
+        subtitle_en:'Homemade food with warmth'
+    }];
+
+    hero.innerHTML = banners.slice(0, 3).map((banner, index) => {
+        const title = state.lang === 'ru'
+            ? banner.title_ru || banner.title_en || 'Taste of Home'
+            : banner.title_en || banner.title_ru || 'Taste of Home';
+
+        const subtitle = state.lang === 'ru'
+            ? banner.subtitle_ru || banner.subtitle_en || ''
+            : banner.subtitle_en || banner.subtitle_ru || '';
+
+        return `
+            <div class="hero-slide ${index === 0 ? 'active' : ''}" style="background-image:url('${escapeHtml(imageOf(banner))}')">
+                <div class="hero-content">
+                    <h1 class="hero-title">${escapeHtml(title)}</h1>
+                    <p class="hero-subtitle">${escapeHtml(subtitle)}</p>
+                    <div class="search">
+                        <span>🔍</span>
+                        <input id="search-input" placeholder="${escapeHtml(t('search'))}" oninput="renderProducts()">
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    let index = 0;
+    clearInterval(window.__heroTimer);
+
+    window.__heroTimer = setInterval(() => {
+        const slides = [...document.querySelectorAll('.hero-slide')];
+
+        if (slides.length <= 1) return;
+
+        slides[index].classList.remove('active');
+        index = (index + 1) % slides.length;
+        slides[index].classList.add('active');
+    }, 4500);
+}
+
+function renderCategories() {
+    const wrapper = document.getElementById('categories');
+
+    const categories = [
+        {
+            id:'all',
+            title_ru:t('all'),
+            title_en:t('all')
+        },
+        ...state.categories
+    ];
+
+    wrapper.innerHTML = categories.map(category => `
+        <button class="cat ${state.activeCategory === category.id ? 'active' : ''}" data-cat="${escapeHtml(category.id)}">
+            ${escapeHtml(category.id === 'all' ? t('all') : categoryTitle(category))}
+        </button>
+    `).join('');
+}
+
+function renderDistricts() {
+    const select = document.getElementById('order-district');
+
+    const defaults = [
+        { district:'Ocean Park 1' },
+        { district:'Ocean Park 2' },
+        { district:'Eco Park' },
+        { district:'Hanoi' }
+    ];
+
+    const list = state.deliverySettings.length ? state.deliverySettings : defaults;
+
+    select.innerHTML = list.map(item => `
+        <option value="${escapeHtml(deliveryKeyFromDistrict(item.district))}">
+            ${escapeHtml(item.district)}
+        </option>
+    `).join('');
+}
+
+function filteredProducts() {
+    const term = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+    return state.products.filter(product => {
+        const byCategory = state.activeCategory === 'all' || product.category === state.activeCategory;
+        const text = `${productName(product)} ${productDesc(product)}`.toLowerCase();
+
+        return byCategory && (!term || text.includes(term));
+    });
+}
+
+function renderProducts() {
+    const wrapper = document.getElementById('products');
+
+    if (!wrapper) return;
+
+    const list = filteredProducts();
+
+    if (!list.length) {
+        wrapper.innerHTML = `<div class="empty">${t('loading')}</div>`;
+        return;
+    }
+
+    wrapper.innerHTML = list.map(product => `
+        <article class="product" data-product="${escapeHtml(product.id)}">
+            ${product.badge ? `<div class="badge">${escapeHtml(product.badge)}</div>` : ''}
+
+            <img src="${escapeHtml(product.img)}" alt="" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+
+            <div class="product-body">
+                <div class="product-name">${escapeHtml(productName(product))}</div>
+
+                ${product.weight ? `<div class="product-weight">${escapeHtml(product.weight)}</div>` : ''}
+
+                ${product.side_options.length ? `<div class="side-mark">${t('side')}: ${product.side_options.map(optionLabel).map(escapeHtml).join(' / ')}</div>` : ''}
+
+                <div class="product-bottom">
+                    <div class="price">${formatPrice(product.price)}</div>
+                    <button class="add" data-add="${escapeHtml(product.id)}">+</button>
+                </div>
+            </div>
+        </article>
+    `).join('');
+}
+
+function openProduct(id) {
+    const product = state.products.find(item => item.id === String(id));
+
+    if (!product) return;
+
+    state.selectedProduct = product;
+    state.selectedSide = product.side_options.length ? product.side_options[0] : null;
+    state.selectedExtras = [];
+    state.modalQty = 1;
+
+    const modalAdd = document.getElementById('modal-add');
+    if (modalAdd) {
+        modalAdd.textContent = t('add');
+        modalAdd.disabled = false;
+        modalAdd.classList.remove('add-press');
+        modalAdd.style.pointerEvents = 'auto';
+        modalAdd.style.opacity = '1';
+    }
+
+    document.getElementById('modal-img').src = product.img;
+    document.getElementById('modal-name').textContent = productName(product);
+    document.getElementById('modal-desc').textContent = productDesc(product);
+    document.getElementById('modal-close').textContent = t('close');
+
+    const sideHtml = product.side_options.length ? `
+        <h3 style="margin:14px 0 8px;">${t('chooseSide')}</h3>
+        <div class="side-options">
+            ${product.side_options.map((side, index) => {
+                const label = optionLabel(side);
+                return `
+                    <button type="button" class="side-option ${index === 0 ? 'active' : ''}" data-side-index="${index}">
+                        ${escapeHtml(label)}
+                    </button>
+                `;
+            }).join('')}
+        </div>
+    ` : '';
+
+    const extrasHtml = product.extra_options.length ? `
+        <div class="extra-options">
+            <div class="extra-title">${t('addOn')}</div>
+            ${product.extra_options.map((extra, index) => `
+                <label class="extra-option">
+                    <input type="checkbox" data-extra-index="${index}">
+                    <span>${escapeHtml(optionLabel(extra))}${extra.price ? ` +${formatPrice(extra.price)}` : ''}</span>
+                </label>
+            `).join('')}
+        </div>
+    ` : '';
+
+    const qtyHtml = `
+        <div class="modal-qty-box">
+            <div class="modal-qty-label">${t('quantity')}</div>
+            <div class="modal-qty-controls">
+                <button type="button" data-modal-qty="-1">−</button>
+                <strong id="modal-qty-value">1</strong>
+                <button type="button" data-modal-qty="1">+</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modal-sides').innerHTML = sideHtml + extrasHtml + qtyHtml;
+
+    refreshModalPrice();
+    document.getElementById('product-modal').classList.add('active');
+}
+
+function closeProductModal() {
+
+
+    const cartList = document.getElementById('cart-list');
+    if (cartList) {
+        cartList.addEventListener('click', event => {
+            const qtyButton = event.target.closest('[data-qty]');
+            if (!qtyButton) return;
+            event.preventDefault();
+            event.stopPropagation();
+            updateQty(qtyButton.dataset.qty, Number(qtyButton.dataset.delta));
+        });
+    }
+
+    const modal = document.getElementById('product-modal');
+    if (modal) modal.classList.remove('active');
+
+    const modalAdd = document.getElementById('modal-add');
+    if (modalAdd) {
+        modalAdd.textContent = t('add');
+        modalAdd.disabled = false;
+        modalAdd.classList.remove('add-press');
+        modalAdd.style.pointerEvents = 'auto';
+        modalAdd.style.opacity = '1';
+    }
+}
+
+function setModalQty(value) {
+    const qty = Math.max(1, Math.min(99, Number(value || 1)));
+    state.modalQty = qty;
+
+    const valueEl = document.getElementById('modal-qty-value');
+    if (valueEl) valueEl.textContent = qty;
+
+    refreshModalPrice();
+}
+
+function collectSelectedExtrasFromModal() {
+    if (!state.selectedProduct) return [];
+
+    return [...document.querySelectorAll('#modal-sides input[data-extra-index]:checked')]
+        .map(input => state.selectedProduct.extra_options[Number(input.dataset.extraIndex)])
+        .filter(Boolean);
+}
+
+function refreshModalPrice() {
+    if (!state.selectedProduct) return;
+
+    const extras = collectSelectedExtrasFromModal();
+    const extrasTotal = extras.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const qty = Math.max(1, Number(state.modalQty || 1));
+    const oneItemPrice = Number(state.selectedProduct.price || 0) + extrasTotal;
+
+    const priceEl = document.getElementById('modal-price');
+    if (!priceEl) return;
+
+    priceEl.textContent = qty > 1
+        ? `${qty} × ${formatPrice(oneItemPrice)} = ${formatPrice(oneItemPrice * qty)}`
+        : formatPrice(oneItemPrice);
+}
+
+function showAddAnimation(product, sourceElement = null) {
+    const badge = document.getElementById('cart-badge');
+    const toast = document.getElementById('add-toast');
+
+    if (sourceElement) {
+        sourceElement.classList.remove('add-press');
+        void sourceElement.offsetWidth;
+        sourceElement.classList.add('add-press');
+        setTimeout(() => sourceElement.classList.remove('add-press'), 320);
+    }
+
+    if (badge) {
+        badge.classList.remove('cart-bump');
+        void badge.offsetWidth;
+        badge.classList.add('cart-bump');
+        setTimeout(() => badge.classList.remove('cart-bump'), 520);
+    }
+
+    if (toast) {
+        clearTimeout(window.__addToastTimer);
+        toast.innerHTML = `
+            <strong>${escapeHtml(t('addedToCart'))}</strong>
+            <span>${escapeHtml(productName(product))}</span>
+        `;
+        toast.classList.add('active');
+        window.__addToastTimer = setTimeout(() => toast.classList.remove('active'), 1200);
+    }
+}
+
+function addToCart(product, sideChoice, selectedExtras = [], qty = 1, sourceElement = null) {
+    if (!product || !product.is_available) {
+        tg.showAlert(t('unavailable'));
+        return false;
+    }
+
+    qty = Math.max(1, Math.min(99, Number(qty || 1)));
+
+    if (product.side_options.length && !sideChoice) {
+        tg.showAlert(t('needSide'));
+        return false;
+    }
+
+    const sideObj = sideChoice && typeof sideChoice === 'object'
+        ? sideChoice
+        : (product.side_options.find(option => optionLabel(option) === sideChoice || option.name === sideChoice || option.name_ru === sideChoice || option.name_en === sideChoice) || null);
+    const sideLabel = sideObj ? optionLabel(sideObj) : String(sideChoice || '');
+    const sideRu = sideObj ? (sideObj.name_ru || sideObj.name || sideLabel) : sideLabel;
+    const sideEn = sideObj ? (sideObj.name_en || sideObj.name || sideLabel) : sideLabel;
+
+    selectedExtras = (selectedExtras || []).map(item => ({
+        name:optionLabel(item),
+        name_ru:item.name_ru || item.name || '',
+        name_en:item.name_en || item.name || '',
+        price:Number(item.price || 0)
+    }));
+
+    const extrasKey = selectedExtras
+        .map(item => `${item.name_ru || item.name}:${item.name_en || item.name}:${item.price}`)
+        .sort()
+        .join('|') || 'no_extras';
+    const extrasTotal = selectedExtras.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const cartKey = `${product.id}__${sideRu || sideLabel || 'no_side'}__${sideEn || sideLabel || 'no_side'}__${extrasKey}`;
+    const existing = state.cart.find(item => item.cartKey === cartKey);
+
+    if (existing) {
+        existing.qty = Number(existing.qty || 0) + qty;
+        existing.price = product.price + extrasTotal;
+        existing.base_price = product.price;
+        existing.extras = selectedExtras;
+    } else {
+        state.cart.push({
+            cartKey,
+            id:product.id,
+            img:product.img,
+            name:productName(product),
+            price:product.price + extrasTotal,
+            base_price:product.price,
+            extras:selectedExtras,
+            qty,
+            side_choice:sideLabel || '',
+            side_choice_ru:sideRu || sideLabel || '',
+            side_choice_en:sideEn || sideLabel || ''
+        });
+    }
+
+    state.lastAddedCartKey = cartKey;
+
+    saveCart();
+    renderCart();
+    showAddAnimation(product, sourceElement);
+    tg.HapticFeedback?.impactOccurred?.('medium');
+
+    return true;
+}
+
+function syncCart() {
+    state.cart = state.cart.map(item => {
+        const product = state.products.find(product => product.id === String(item.id));
+
+        if (!product) return null;
+
+        const sideRu = item.side_choice_ru || item.side_choice || '';
+        const sideEn = item.side_choice_en || item.side_choice || '';
+        const sideObj = product.side_options.find(option => option.name_ru === sideRu || option.name_en === sideEn || option.name === item.side_choice || optionLabel(option) === item.side_choice) || null;
+
+        if (product.side_options.length && !sideObj) {
+            return null;
+        }
+
+        const sideLabel = sideObj ? optionLabel(sideObj) : '';
+        const extras = (item.extras || []).filter(extra => product.extra_options.some(option => option.name === extra.name || option.name_ru === extra.name_ru || option.name_en === extra.name_en));
+        const extrasTotal = extras.reduce((sum, extra) => sum + Number(extra.price || 0), 0);
+        const extrasKey = extras.map(extra => `${extra.name_ru || extra.name}:${extra.name_en || extra.name}:${extra.price}`).sort().join('|') || 'no_extras';
+
+        return {
+            ...item,
+            img:product.img,
+            name:productName(product),
+            base_price:product.price,
+            price:product.price + extrasTotal,
+            extras,
+            side_choice:sideLabel,
+            side_choice_ru:sideObj ? (sideObj.name_ru || sideObj.name || sideLabel) : '',
+            side_choice_en:sideObj ? (sideObj.name_en || sideObj.name || sideLabel) : '',
+            cartKey:`${product.id}__${sideObj ? (sideObj.name_ru || sideObj.name || sideLabel) : 'no_side'}__${sideObj ? (sideObj.name_en || sideObj.name || sideLabel) : 'no_side'}__${extrasKey}`
+        };
+    }).filter(Boolean);
+
+    saveCart();
+}
+
+function renderCart() {
+    setDefaultDeliveryDateTime();
+
+    const list = document.getElementById('cart-list');
+    const totalQty = state.cart.reduce((sum, item) => sum + item.qty, 0);
+
+    document.getElementById('cart-badge').textContent = totalQty;
+    document.getElementById('cart-badge').style.display = totalQty ? 'flex' : 'none';
+
+    if (!state.cart.length) {
+        list.innerHTML = `<div class="empty">${t('cartEmpty')}</div>`;
+    } else {
+        list.innerHTML = state.cart.map(item => `
+            <div class="cart-item ${state.lastAddedCartKey === item.cartKey ? 'cart-highlight' : ''}">
+                <img src="${escapeHtml(item.img)}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+
+                <div class="cart-main">
+                    <div class="cart-name">${escapeHtml(item.name)}</div>
+                    ${item.side_choice ? `<div class="cart-side">${t('side')}: ${escapeHtml(state.lang === 'ru' ? (item.side_choice_ru || item.side_choice) : (item.side_choice_en || item.side_choice))}</div>` : ''}
+                    ${item.extras && item.extras.length ? `<div class="cart-extra">${t('addOn')}: ${escapeHtml(extrasLabel(item.extras))}</div>` : ''}
+                    <div class="price" style="margin-top:5px;">${formatPrice(item.price)}</div>
+                </div>
+
+                <div class="qty">
+                    <button type="button" data-qty="${escapeHtml(item.cartKey)}" data-delta="-1">−</button>
+                    <strong>${item.qty}</strong>
+                    <button type="button" data-qty="${escapeHtml(item.cartKey)}" data-delta="1">+</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if (state.lastAddedCartKey) {
+        clearTimeout(window.__cartHighlightTimer);
+        window.__cartHighlightTimer = setTimeout(() => {
+            state.lastAddedCartKey = '';
+            renderCart();
+        }, 780);
+    }
+
+    const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const delivery = calculateDelivery(subtotal);
+    const total = subtotal + delivery.delivery_total;
+
+    document.getElementById('subtotal').textContent = formatPrice(subtotal);
+    document.getElementById('delivery').textContent = delivery.delivery_label || formatPrice(delivery.delivery_total);
+    document.getElementById('delivery-note').textContent = delivery.delivery_note || '';
+    document.getElementById('total').textContent = formatPrice(total);
+
+    const isDelivery = document.getElementById('order-type').value === 'delivery';
+
+    document.getElementById('district-field').style.display = isDelivery ? 'block' : 'none';
+    document.getElementById('address-field').style.display = isDelivery ? 'block' : 'none';
+}
+
+function updateQty(cartKey, delta) {
+    const item = state.cart.find(item => item.cartKey === cartKey);
+
+    if (!item) return;
+
+    item.qty += delta;
+
+    if (item.qty <= 0) {
+        state.cart = state.cart.filter(item => item.cartKey !== cartKey);
+    }
+
+    saveCart();
+    renderCart();
+}
+
+function buildOrderPayload() {
+    const name = document.getElementById('order-name').value.trim();
+    const phone = document.getElementById('order-phone').value.trim();
+    const type = document.getElementById('order-type').value;
+    const address = document.getElementById('order-address').value.trim();
+    const district = districtApiValue(document.getElementById('order-district').value);
+    const payment = getPaymentMethod();
+
+    const deliveryDateTimeValue = document.getElementById('order-delivery-datetime').value;
+    const deliveryDateTimeFormatted = formatDeliveryDateTime(deliveryDateTimeValue);
+
+    const userComment = document.getElementById('order-comment').value.trim();
+
+    if (!name || !phone || (type === 'delivery' && !address)) {
+        tg.showAlert(t('required'));
+        return null;
+    }
+
+    if (!isDeliveryDateTimeValid()) {
+        tg.showAlert(t('chooseDateTime'));
+        return null;
+    }
+
+    if (!state.cart.length) {
+        tg.showAlert(t('cartEmpty'));
+        return null;
+    }
+
+    const subtotal = state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const delivery = calculateDelivery(subtotal);
+    const total = subtotal + delivery.delivery_total;
+
+    const commentWithDeliveryTime = userComment
+        ? `${t('deliveryTimePrefix')}: ${deliveryDateTimeFormatted}\n${userComment}`
+        : `${t('deliveryTimePrefix')}: ${deliveryDateTimeFormatted}`;
+
+    return {
+        apiPayload:{
+            customer_name:name,
+            phone,
+            address:type === 'delivery' ? address : '',
+            district:type === 'delivery' ? district : 'Самовывоз',
+            order_type:type,
+            payment_method:payment,
+            delivery_time_hours:2,
+            delivery_datetime:deliveryDateTimeFormatted,
+            comment:commentWithDeliveryTime,
+            telegram_user_id:String(tg.initDataUnsafe?.user?.id || ''),
+            username:tg.initDataUnsafe?.user?.username || '',
+            language:state.lang,
+            items:state.cart.map(item => ({
+                product_id:String(item.id),
+                qty:item.qty,
+                side_choice:state.lang === 'ru' ? (item.side_choice_ru || item.side_choice || '') : (item.side_choice_en || item.side_choice || ''),
+                selected_extras:item.extras || []
+            }))
+        },
+        localView:{
+            createdAt:new Date().toLocaleString(state.lang === 'ru' ? 'ru-RU' : 'en-US'),
+            total:formatPrice(total),
+            itemsSummary:state.cart.map(item => `${item.name}${item.side_choice ? ' / ' + t('side') + ': ' + (state.lang === 'ru' ? (item.side_choice_ru || item.side_choice) : (item.side_choice_en || item.side_choice)) : ''}${item.extras && item.extras.length ? ' / ' + t('addOn') + ': ' + extrasLabel(item.extras) : ''} × ${item.qty}`).join(', '),
+            paymentLabel:paymentLabel(payment),
+            deliveryDateTime:deliveryDateTimeFormatted
+        }
+    };
+}
+
+async function sendOrder() {
+    const order = buildOrderPayload();
+
+    if (!order) return;
+
+    tg.showConfirm(t('confirm'), async ok => {
+        if (!ok) return;
+
+        const button = document.getElementById('checkout');
+        const oldText = button.textContent;
+
+        try {
+            button.disabled = true;
+            button.textContent = t('sending');
+
+            const result = await apiPost('/api/orders', order.apiPayload);
+
+            state.history.unshift({
+                ...order.localView,
+                orderNumber:result.order_number ? `#${result.order_number}` : '',
+                total:result.total_formatted || order.localView.total
+            });
+
+            saveHistory();
+
+            state.cart = [];
+            saveCart();
+
+            document.getElementById('order-phone').value = '';
+            document.getElementById('order-address').value = '';
+            document.getElementById('order-comment').value = '';
+            document.getElementById('order-delivery-datetime').value = '';
+
+            setDefaultDeliveryDateTime();
+
+            renderAll();
+            switchTab('menu');
+
+            tg.showAlert(`${t('success')}${result.order_number ? ': #' + result.order_number : ''}`);
+        } catch (error) {
+            console.error(error);
+            tg.showAlert('Error: ' + error.message);
+        } finally {
+            button.disabled = false;
+            button.textContent = oldText;
+        }
+    });
+}
+
+function renderHistory() {
+    const box = document.getElementById('history');
+
+    if (!state.history.length) {
+        box.innerHTML = `<div class="empty" style="padding:30px;">${t('noHistory')}</div>`;
+        return;
+    }
+
+    box.innerHTML = state.history.map(item => `
+        <div class="history-item">
+            <strong>${escapeHtml(item.orderNumber || '')} ${escapeHtml(item.total || '')}</strong><br>
+            <span style="color:#777">${escapeHtml(item.createdAt || '')}</span><br>
+            ${item.deliveryDateTime ? `<span style="color:#777">${t('deliveryTimePrefix')}: ${escapeHtml(item.deliveryDateTime)}</span><br>` : ''}
+            <span>${escapeHtml(item.itemsSummary || '')}</span>
+        </div>
+    `).join('');
+}
+
+function renderAll() {
+    applyTexts();
+    setDefaultDeliveryDateTime();
+    renderHero();
+    renderWorkingHours();
+    renderCategories();
+    renderDistricts();
+    renderProducts();
+    renderCart();
+    renderHistory();
+}
+
+function renderWorkingHours() {
+    const block = document.getElementById('working-hours-block');
+    const title = document.getElementById('working-hours-title');
+    const text = document.getElementById('working-hours-text');
+
+    const ruValue = String(state.workingHoursRu || state.workingHours || '').trim();
+    const enValue = String(state.workingHoursEn || state.workingHours || '').trim();
+    const value = state.lang === 'ru' ? ruValue : enValue;
+
+    if (!block || !text) return;
+
+    if (title) title.textContent = t('workingHours');
+
+    block.classList.toggle('active', Boolean(value));
+    text.textContent = value;
+}
+
+async function loadData() {
+    state.isLoading = true;
+
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+        loadingEl.textContent = '...';
+    }
+
+    renderProducts();
+
+    try {
+        const categories = await apiGet('/api/categories').catch(error => {
+            console.error('categories error:', error);
+            return [];
+        });
+
+        const banners = await apiGet('/api/banners').catch(error => {
+            console.error('banners error:', error);
+            return [];
+        });
+
+        const menu = await apiGet('/api/menu').catch(error => {
+            console.error('menu error:', error);
+            return [];
+        });
+
+        const delivery = await apiGet('/api/delivery/settings').catch(error => {
+            console.error('delivery settings error:', error);
+            return [];
+        });
+
+        const workingHours = await apiGet('/api/settings/working-hours').catch(error => {
+            console.error('working hours error:', error);
+            return {working_hours:'', working_hours_ru:'', working_hours_en:''};
+        });
+
+        state.categories = Array.isArray(categories) ? categories : [];
+        state.banners = Array.isArray(banners) ? banners : [];
+        state.products = Array.isArray(menu)
+            ? menu.map(normalizeProduct).sort((a, b) => a.sort_order - b.sort_order)
+            : [];
+        state.deliverySettings = Array.isArray(delivery) ? delivery : [];
+        state.workingHours = workingHours && typeof workingHours === 'object' ? (workingHours.working_hours || '') : '';
+        state.workingHoursRu = workingHours && typeof workingHours === 'object' ? (workingHours.working_hours_ru || workingHours.working_hours || '') : '';
+        state.workingHoursEn = workingHours && typeof workingHours === 'object' ? (workingHours.working_hours_en || workingHours.working_hours || '') : '';
+
+        syncCart();
+    } catch (error) {
+        console.error('MENU LOAD ERROR:', error);
+    } finally {
+        state.isLoading = false;
+
+        if (loadingEl) {
+            loadingEl.textContent = '';
+        }
+
+        renderAll();
+    }
+}
+
+function bindAppEvents() {
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav) {
+        bottomNav.addEventListener('click', event => {
+            const nav = event.target.closest('.nav');
+            if (!nav) return;
+            event.preventDefault();
+            switchTab(nav.dataset.tab);
+        });
+    }
+
+    document.querySelectorAll('[data-lang]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            state.lang = button.dataset.lang;
+            localStorage.setItem('toh_lang', state.lang);
+            syncCart();
+            renderAll();
+        });
+    });
+
+    const categoriesBox = document.getElementById('categories');
+    if (categoriesBox) {
+        categoriesBox.addEventListener('click', event => {
+            const category = event.target.closest('[data-cat]');
+            if (!category) return;
+            event.preventDefault();
+            state.activeCategory = category.dataset.cat;
+            renderCategories();
+            renderProducts();
+        });
+    }
+
+    const productsBox = document.getElementById('products');
+    if (productsBox) {
+        productsBox.addEventListener('click', event => {
+            const add = event.target.closest('[data-add]');
+            const card = event.target.closest('[data-product]');
+
+            if (add) {
+                event.preventDefault();
+                event.stopPropagation();
+                const product = state.products.find(item => item.id === String(add.dataset.add));
+                if (product) openProduct(product.id);
+                return;
+            }
+
+            if (card) {
+                event.preventDefault();
+                const product = state.products.find(item => item.id === String(card.dataset.product));
+                if (product) openProduct(product.id);
+            }
+        });
+    }
+
+
+
+    const cartList = document.getElementById('cart-list');
+    if (cartList) {
+        cartList.addEventListener('click', event => {
+            const qtyButton = event.target.closest('[data-qty]');
+            if (!qtyButton) return;
+            event.preventDefault();
+            event.stopPropagation();
+            updateQty(qtyButton.dataset.qty, Number(qtyButton.dataset.delta));
+        });
+    }
+
+    const modal = document.getElementById('product-modal');
+    if (modal) {
+        modal.addEventListener('click', event => {
+            const closeButton = event.target.closest('#modal-close');
+            const addButton = event.target.closest('#modal-add');
+            const sideButton = event.target.closest('[data-side-index]');
+            const qtyButton = event.target.closest('[data-modal-qty]');
+
+            if (event.target === modal || closeButton) {
+                event.preventDefault();
+                closeProductModal();
+                return;
+            }
+
+            if (qtyButton) {
+                event.preventDefault();
+                event.stopPropagation();
+                setModalQty(Number(state.modalQty || 1) + Number(qtyButton.dataset.modalQty || 0));
+                return;
+            }
+
+            if (sideButton && state.selectedProduct) {
+                event.preventDefault();
+                event.stopPropagation();
+                const sideIndex = Number(sideButton.dataset.sideIndex);
+                state.selectedSide = state.selectedProduct.side_options[sideIndex] || null;
+                document.querySelectorAll('.side-option').forEach(item => {
+                    item.classList.toggle('active', item.dataset.sideIndex === String(sideIndex));
+                });
+                refreshModalPrice();
+                return;
+            }
+
+            if (addButton) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!state.selectedProduct) return;
+
+                const extras = collectSelectedExtrasFromModal();
+                const qtyValue = Math.max(1, Number(state.modalQty || 1));
+                const added = addToCart(state.selectedProduct, state.selectedSide, extras, qtyValue, addButton);
+
+                if (!added) return;
+
+                addButton.textContent = '✓';
+                addButton.style.opacity = '.92';
+
+                clearTimeout(window.__modalCloseTimer);
+                window.__modalCloseTimer = setTimeout(() => {
+                    closeProductModal();
+                }, 180);
+            }
+        });
+    }
+}
+
+bindAppEvents();
+
+document.addEventListener('change', event => {
+    if (event.target.matches('#modal-sides input[data-extra-index]')) {
+        refreshModalPrice();
+        return;
+    }
+
+    if (
+        event.target.name === 'payment_method' ||
+        event.target.id === 'order-type' ||
+        event.target.id === 'order-district' ||
+        event.target.id === 'order-delivery-datetime'
+    ) {
+        renderCart();
+    }
+});
+
+document.getElementById('order-form').addEventListener('submit', event => {
+    event.preventDefault();
+    sendOrder();
+});
+
+loadData();
+</script>
+</body>
+</html>
